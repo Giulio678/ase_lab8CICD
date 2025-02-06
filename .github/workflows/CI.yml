@@ -27,22 +27,24 @@ jobs:
         run: |
           docker build -t test_calc -f src/calc/Dockerfile_test src/calc
           docker build -t test_string -f src/string/Dockerfile_test src/string
+          docker build -t test_gateway -f src/gateway/Dockerfile src/gateway
 
       - name: Run unit test containers
         run: |
           docker run -d --name calc_test_container --network test_network test_calc
           docker run -d --name string_test_container --network test_network test_string
+          docker run -d --name gateway_test_container --network test_network -p 5000:5000 test_gateway
           sleep 5  # Aspetta che i servizi siano avviati
 
-      - name: Run unit tests with Newman
+      - name: Run unit tests with Newman (Gateway as API entry point)
         run: |
-          newman run tests/calc_ut.postman_collection.json --env-var "host=http://calc_test_container:5000"
-          newman run tests/string_ut.postman_collection.json --env-var "host=http://string_test_container:5000"
+          newman run tests/calc_ut.postman_collection.json
+          newman run tests/string_ut.postman_collection.json
 
       - name: Stop unit test containers
         run: |
-          docker stop calc_test_container string_test_container
-          docker rm calc_test_container string_test_container
+          docker stop calc_test_container string_test_container gateway_test_container
+          docker rm calc_test_container string_test_container gateway_test_container
 
       - name: Remove Docker Network
         run: docker network rm test_network
