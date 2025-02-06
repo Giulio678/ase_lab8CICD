@@ -27,8 +27,9 @@ jobs:
 
       - name: Run unit test containers
         run: |
-          docker run -d --name calc_test_container test_calc
-          docker run -d --name string_test_container test_string
+          docker run -d --name calc_test_container -p 5000:5000 test_calc
+          docker run -d --name string_test_container -p 5001:5000 test_string
+          sleep 5  # Aspetta 5 secondi per assicurarti che i servizi siano avviati
 
       - name: Run unit tests with Newman
         run: |
@@ -49,6 +50,9 @@ jobs:
 
       - name: Set up Docker Compose
         run: docker-compose -f src/docker-compose.yml up --build -d
+
+      - name: Wait for services to start
+        run: sleep 10  # Aspetta 10 secondi per garantire che tutti i servizi siano attivi
 
       - name: Run integration tests with Newman
         run: newman run tests/integration.postman_collection.json
